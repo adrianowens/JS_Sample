@@ -1,18 +1,16 @@
-const mysql = require('mysql');
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'app_user',
-  password: 'password',
-  database: 'myapp'
-});
+function auth_filter(req, res, next) {
+    const user = auth(req) || {};
+    const sql = `SELECT COUNT(*) AS authorized
+                 FROM user
+                 WHERE username = '${user.name}' AND
+                       password = '${user.pass}'`;
 
-function getUserByEmail(email) {
-  // VULNERABLE: String concatenation
-  const query = `SELECT * FROM users WHERE email = '\${email}'`;
-
-  return new Promise((resolve, reject) => {
-    connection.query(query, (error, results) => {
-      if (error) reject(error);
-      else resolve(results);
+    // use SQL to authorize the resource
+    private_db.get(sql, function (err, row) {
+        if (err || !row.authorized) {
+            res.writeHead(401, {'WWW-Authenticate': 'Basic realm="Private"'});
+            res.end('Unauthorized');
+        } else {
+            next();
+        }
     });
-  });
